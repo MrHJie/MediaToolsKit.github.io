@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>未来梦境生成器</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        #canvas-container {
+            width: 1055px;
+            height: 1411px;
+            margin: 20px auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(123, 0, 255, 0.3);
+            background: linear-gradient(45deg, #000428, #004e92);
+            position: relative;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 198, 255, 0.3);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 198, 255, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="canvas-container">
+            <canvas id="canvas" width="1055" height="1411"></canvas>
+        </div>
+        <div class="button-container">
+            <button class="button" onclick="generateImage()">创造新世界</button>
+            <button class="button" onclick="downloadImage()" id="downloadBtn">保存作品</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 生成渐变色
+        function getGradientColor() {
+            const colors = [
+                ['#00c6ff', '#0072ff'], // 蓝色系
+                ['#ff6b6b', '#ee0979'], // 红色系
+                ['#7f00ff', '#e100ff'], // 紫色系
+                ['#00ff87', '#60efff'], // 青色系
+                ['#ff6a00', '#ee0979'], // 橙红系
+                ['#1cb5e0', '#000046']  // 深蓝系
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // 绘制流体效果
+        function drawFluid() {
+            const [color1, color2] = getGradientColor();
+            
+            // 创建多层渐变背景制造深度感
+            for(let i = 0; i < 3; i++) {
+                const gradient = ctx.createLinearGradient(
+                    i * 50, i * 50, 
+                    canvas.width - i * 50, canvas.height - i * 50
+                );
+                gradient.addColorStop(0, `${color1}${90 - i * 20}`);
+                gradient.addColorStop(1, `${color2}${90 - i * 20}`);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(i * 20, i * 20, canvas.width - i * 40, canvas.height - i * 40);
+            }
+
+            // 添加3D流体波纹
+            for(let i = 0; i < 8; i++) {
+                const centerX = Math.random() * canvas.width;
+                const centerY = Math.random() * canvas.height;
+                const radius = Math.random() * 600 + 200;
+                
+                // 创建同心圆渐变制造3D波纹效果
+                for(let j = 0; j < 3; j++) {
+                    const gradient = ctx.createRadialGradient(
+                        centerX, centerY, radius * j/3,
+                        centerX, centerY, radius * (j+1)/3
+                    );
+                    
+                    gradient.addColorStop(0, `${color1}${15 - j * 5}`);
+                    gradient.addColorStop(0.5, `${color2}${10 - j * 3}`);
+                    gradient.addColorStop(1, 'transparent');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 添加浮动的3D圆环
+            for(let i = 0; i < 5; i++) {
+                const centerX = Math.random() * canvas.width;
+                const centerY = Math.random() * canvas.height;
+                const radius = Math.random() * 100 + 50;
+                
+                // 绘制3D圆环
+                ctx.save();
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, radius, radius * 0.4, Math.PI / 4, 0, Math.PI * 2);
+                const ringGradient = ctx.createLinearGradient(
+                    centerX - radius, centerY - radius,
+                    centerX + radius, centerY + radius
+                );
+                ringGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+                ringGradient.addColorStop(1, 'transparent');
+                ctx.strokeStyle = ringGradient;
+                ctx.lineWidth = 8;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // 绘制光效
+        function drawLightEffects() {
+            for(let i = 0; i < 50; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const radius = Math.random() * 5 + 2;
+                draw3DSphere(x, y, radius);
+            }
+        }
+
+        // 在 <script> 标签内添加新的3D绘制函数
+        function draw3DCube(x, y, size, rotation) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            
+            // 增加更多面和更强的透视效果
+            const depth = size * 0.8;
+            const faces = [
+                // 前面
+                [[0, 0], [size, 0], [size, size], [0, size]],
+                // 右面
+                [[size, 0], [size + depth, -depth/2], [size + depth, size - depth/2], [size, size]],
+                // 顶面
+                [[0, 0], [size, 0], [size + depth, -depth/2], [depth, -depth/2]],
+                // 左面阴影
+                [[0, 0], [depth, -depth/2], [depth, size - depth/2], [0, size]],
+                // 底面阴影
+                [[0, size], [size, size], [size + depth, size - depth/2], [depth, size - depth/2]]
+            ];
+            
+            // 为每个面添加渐变和阴影效果
+            faces.forEach((face, index) => {
+                ctx.beginPath();
+                ctx.moveTo(face[0][0], face[0][1]);
+                face.forEach(point => ctx.lineTo(point[0], point[1]));
+                ctx.closePath();
+                
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                
+                // 根据面的位置设置不同的光影效果
+                switch(index) {
+                    case 0: // 前面
+                        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+                        break;
+                    case 1: // 右面
+                        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+                        break;
+                    case 2: // 顶面
+                        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.15)');
+                        break;
+                    default: // 阴影面
+                        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.1)');
+                        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+                }
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.stroke();
+
+                // 添加内部细节线条
+                if (index === 0) { // 只在前面添加细节
+                    // 添加交叉线
+                    ctx.beginPath();
+                    ctx.moveTo(size * 0.2, size * 0.2);
+                    ctx.lineTo(size * 0.8, size * 0.8);
+                    ctx.moveTo(size * 0.2, size * 0.8);
+                    ctx.lineTo(size * 0.8, size * 0.2);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    // 添加边框装饰
+                    ctx.strokeRect(size * 0.1, size * 0.1, size * 0.8, size * 0.8);
+                }
+            });
+            
+            // 增强高光效果
+            const highlightGradient = ctx.createLinearGradient(0, 0, size/2, -size/4);
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            highlightGradient.addColorStop(1, 'transparent');
+            ctx.strokeStyle = highlightGradient;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(size/2, -size/4);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // 添加新的3D金字塔函数
+        function draw3DPyramid(x, y, size, rotation) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            
+            const height = size * 1.5;
+            const points = [
+                [0, 0],  // 顶点
+                [-size/2, size], // 左底点
+                [size/2, size],  // 右底点
+                [0, size + size/4] // 后底点
+            ];
+            
+            // 绘制金字塔面
+            const faces = [
+                [0, 1, 2], // 前面
+                [0, 2, 3], // 右面
+                [0, 3, 1]  // 左面
+            ];
+            
+            faces.forEach((face, index) => {
+                ctx.beginPath();
+                ctx.moveTo(points[face[0]][0], points[face[0]][1]);
+                ctx.lineTo(points[face[1]][0], points[face[1]][1]);
+                ctx.lineTo(points[face[2]][0], points[face[2]][1]);
+                ctx.closePath();
+                
+                // 为每个面创建独特的渐变
+                const gradient = ctx.createLinearGradient(
+                    points[face[0]][0], points[face[0]][1],
+                    points[face[1]][0], points[face[1]][1]
+                );
+                
+                switch(index) {
+                    case 0: // 前面
+                        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+                        break;
+                    case 1: // 右面
+                        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+                        break;
+                    case 2: // 左面
+                        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+                        break;
+                }
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.stroke();
+            });
+            
+            // 添加光效
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -size/3);
+            const glowGradient = ctx.createLinearGradient(0, 0, 0, -size/3);
+            glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            glowGradient.addColorStop(1, 'transparent');
+            ctx.strokeStyle = glowGradient;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // 修改 drawGeometricShapes 函数，添加更多3D形状
+        function drawGeometricShapes() {
+            // 绘制立方体
+            for(let i = 0; i < 8; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 60 + 30;
+                const rotation = Math.random() * Math.PI * 2;
+                draw3DCube(x, y, size, rotation);
+            }
+            
+            // 绘制金字塔
+            for(let i = 0; i < 8; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 60 + 30;
+                const rotation = Math.random() * Math.PI * 2;
+                draw3DPyramid(x, y, size, rotation);
+            }
+        }
+
+        // 添加3D光晕效果
+        function draw3DGlow() {
+            for(let i = 0; i < 5; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const baseRadius = Math.random() * 200 + 100;
+                
+                // 创建多层光晕制造3D效果
+                for(let j = 0; j < 3; j++) {
+                    const radius = baseRadius * (1 - j * 0.2);
+                    const gradient = ctx.createRadialGradient(
+                        x, y, 0,
+                        x, y, radius
+                    );
+                    
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.15 - j * 0.03})`);
+                    gradient.addColorStop(0.5, `rgba(255, 255, 255, ${0.08 - j * 0.02})`);
+                    gradient.addColorStop(1, 'transparent');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 修改中心矩形为3D效果
+        function drawCenterRectangle() {
+            const width = canvas.width * 0.8;
+            const height = canvas.height * 0.8;
+            const x = (canvas.width - width) / 2;
+            const y = (canvas.height - height) / 2;
+            const depth = 30; // 3D深度
+            
+            ctx.save();
+            
+            // 绘制主矩形的3D效果
+            // 前面
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, 30);
+            const gradient1 = ctx.createLinearGradient(x, y, x + width, y + height);
+            gradient1.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+            gradient1.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+            ctx.fillStyle = gradient1;
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+            ctx.shadowBlur = 20;
+            ctx.fill();
+            
+            // 右侧面
+            ctx.beginPath();
+            ctx.moveTo(x + width, y);
+            ctx.lineTo(x + width + depth, y - depth);
+            ctx.lineTo(x + width + depth, y + height - depth);
+            ctx.lineTo(x + width, y + height);
+            ctx.closePath();
+            const gradient2 = ctx.createLinearGradient(x + width, y, x + width + depth, y - depth);
+            gradient2.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            gradient2.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+            ctx.fillStyle = gradient2;
+            ctx.fill();
+            
+            // 顶面
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + depth, y - depth);
+            ctx.lineTo(x + width + depth, y - depth);
+            ctx.lineTo(x + width, y);
+            ctx.closePath();
+            const gradient3 = ctx.createLinearGradient(x, y, x + depth, y - depth);
+            gradient3.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+            gradient3.addColorStop(1, 'rgba(255, 255, 255, 0.15)');
+            ctx.fillStyle = gradient3;
+            ctx.fill();
+            
+            // 添加内部3D框架
+            const innerMargin = 30;
+            const innerWidth = width - innerMargin * 2;
+            const innerHeight = height - innerMargin * 2;
+            
+            // 绘制内部3D框架
+            ctx.beginPath();
+            ctx.moveTo(x + innerMargin, y + innerMargin);
+            ctx.lineTo(x + innerMargin + depth/2, y + innerMargin - depth/2);
+            ctx.lineTo(x + innerMargin + innerWidth + depth/2, y + innerMargin - depth/2);
+            ctx.lineTo(x + innerMargin + innerWidth, y + innerMargin);
+            ctx.closePath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.stroke();
+            
+            // 添加浮动的3D装饰元素
+            for(let i = 0; i < 8; i++) {
+                const px = x + Math.random() * width;
+                const py = y + Math.random() * height;
+                const size = Math.random() * 20 + 10;
+                draw3DSphere(px, py, size);
+            }
+            
+            // 添加角落的3D装饰
+            const corners = [
+                [x, y], // 左上
+                [x + width, y], // 右上
+                [x, y + height], // 左下
+                [x + width, y + height] // 右下
+            ];
+
+            corners.forEach(([cx, cy]) => {
+                // 绘制3D棱角
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + depth, cy - depth);
+                ctx.lineTo(cx + depth + 20, cy - depth);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // 添加小球装饰
+                draw3DSphere(cx, cy, 8);
+            });
+            
+            ctx.restore();
+        }
+
+        // 添加新的3D球体绘制函数
+        function draw3DSphere(x, y, radius) {
+            ctx.save();
+            
+            // 创建球体的径向渐变
+            const gradient = ctx.createRadialGradient(
+                x - radius/3, y - radius/3, radius/10,
+                x, y, radius
+            );
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+            
+            // 绘制主球体
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // 添加高光
+            ctx.beginPath();
+            ctx.arc(x - radius/3, y - radius/3, radius/4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        // 添加新的3D网格背景效果
+        function draw3DGrid() {
+            const gridSize = 50;
+            const perspective = 500;
+            
+            for(let i = 0; i < canvas.width; i += gridSize) {
+                for(let j = 0; j < canvas.height; j += gridSize) {
+                    const depth = Math.sin(i/100) * Math.cos(j/100) * 20;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(i, j);
+                    ctx.lineTo(i + gridSize * (1 + depth/perspective), j + gridSize * (1 + depth/perspective));
+                    
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 + depth/20)})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // 添加3D波浪效果
+        function draw3DWaves() {
+            const waveCount = 3;
+            const amplitude = 50;
+            const frequency = 0.02;
+            
+            for(let wave = 0; wave < waveCount; wave++) {
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height/2);
+                
+                for(let x = 0; x < canvas.width; x += 5) {
+                    const y = Math.sin(x * frequency + wave) * amplitude + 
+                             Math.cos(x * frequency * 0.5) * amplitude * 0.5;
+                    ctx.lineTo(x, canvas.height/2 + y + wave * 100);
+                }
+                
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${0.1 - wave * 0.02})`);
+                gradient.addColorStop(0.5, `rgba(255, 255, 255, ${0.2 - wave * 0.02})`);
+                gradient.addColorStop(1, `rgba(255, 255, 255, ${0.1 - wave * 0.02})`);
+                
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        // 修改 generateImage 函数的绘制顺序
+        function generateImage() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制3D网格背景
+            draw3DGrid();
+            
+            // 绘制3D波浪
+            draw3DWaves();
+            
+            // 绘制流体效果
+            drawFluid();
+            
+            // 添加3D光晕
+            draw3DGlow();
+            
+            // 绘制3D几何图形
+            drawGeometricShapes();
+            
+            // 添加光效
+            drawLightEffects();
+            
+            // 添加中心矩形
+            drawCenterRectangle();
+            
+            // 启用下载按钮
+            document.getElementById('downloadBtn').style.opacity = '1';
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'dream_world.png';
+            canvas.toBlob((blob) => {
+                link.href = URL.createObjectURL(blob);
+                link.click();
+            }, 'image/png', 0.8);
+        }
+
+        // 初始化
+        generateImage();
+        document.getElementById('downloadBtn').style.opacity = '0.5';
+    </script>
+</body>
+</html> 
